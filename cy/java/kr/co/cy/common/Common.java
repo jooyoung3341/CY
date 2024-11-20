@@ -1,60 +1,66 @@
-package kr.co.cy.bybit.service;
+package kr.co.cy.common;
 
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Timestamp;
+import java.text.DecimalFormat;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import groovy.util.logging.Commons;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-
-import org.springframework.http.HttpEntity;
-import kr.co.cy.bybit.model.Ticker;
-
 @Service
-public class BybitService {
-	
+public class Common {
+
     final static String API_KEY  = "fLfrnDiVOeEqwXus6y";
     final static String API_SECRET  = "dCVX8PJYCwAIMv6QCitDaF1CtfTjL7iIR6m1";
     final static String TIMESTAMP = Long.toString(ZonedDateTime.now().toInstant().toEpochMilli());
     final static String RECV_WINDOW = "5000";
- 
-	public Map<String, Object> getKline() throws InvalidKeyException, NoSuchAlgorithmException{
-		System.out.println("들옴");
-		System.out.println("샤ㅡㄷ : " + TIMESTAMP );
+    
+	public String timestempToKst(String ms) {
+        // Unix 타임스탬프 (밀리초)
+        long timestamp = Long.parseLong(ms);
+        // Instant로 변환 (UTC 기준)
+        Instant instant = Instant.ofEpochMilli(timestamp);
+        // 한국 시간대 (UTC+9) 적용
+        ZonedDateTime kstTime = instant.atZone(ZoneId.of("Asia/Seoul"));
+        // 포맷터로 보기 쉽게 출력
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return kstTime.format(formatter);
+	}
+	
+	public String percent(String openPrice, String closePrice) {
+		double dOpenPrice = Double.parseDouble(openPrice);
+		double dClosePrice = Double.parseDouble(closePrice);
 		
-		Map<String, Object> map = new HashMap<>();
-		map.put("category", "spot");
-		map.put("symbol", "BTCUSDT");
-		map.put("interval", "15");
-		map.put("limit", 5);
-		
-		
+		DecimalFormat df = new DecimalFormat("0.00");
+		double result = (dClosePrice - dOpenPrice) / dOpenPrice * 100;
+		 return df.format(result);
+	}
+	public Map<String, Object> getBybit(Map<String, Object> map, String url) throws InvalidKeyException, NoSuchAlgorithmException{
 		String signature = genGetSign(map);
 		StringBuilder sb = genQueryStr(map);
 
 		 OkHttpClient client = new OkHttpClient().newBuilder().build();
 	        Request request = new Request.Builder()
-	                .url("https://api-testnet.bybit.com/v5/market/kline?" + sb)
+	                .url(url + sb)
 	                .get()
 	                .addHeader("X-BAPI-API-KEY", API_KEY)
 	                .addHeader("X-BAPI-SIGN", signature)
@@ -64,16 +70,20 @@ public class BybitService {
 	                .build();
 	        Call call = client.newCall(request);
 	        try {
-	            Response response = call.execute();
+	            Response response = call.execute(); 
 	            assert response.body() != null;
-	            System.out.println(response.body().string());
+	            
+	            String responseBody = response.body().string();
+	            
+	            ObjectMapper objectMapper = new ObjectMapper();
+	            return objectMapper.readValue(responseBody, Map.class);
 	        }catch (IOException e){
 	            e.printStackTrace();
+	            return new HashMap<>();
 	        }
-		return new HashMap<>();
 	}
-
-	   private static String genGetSign(Map<String, Object> params) throws NoSuchAlgorithmException, InvalidKeyException {
+	
+	  private static String genGetSign(Map<String, Object> params) throws NoSuchAlgorithmException, InvalidKeyException {
 	        StringBuilder sb = genQueryStr(params);
 	        String queryStr = TIMESTAMP + API_KEY + RECV_WINDOW + sb;
 
@@ -107,5 +117,4 @@ public class BybitService {
 	        }
 	        return hexString.toString();
 	    }
-
 }

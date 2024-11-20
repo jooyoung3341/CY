@@ -8,24 +8,71 @@
 </head>
 
 <div layout:fragment="content">
-
+<div style="padding-left:10px;"></div>
+	<div class="row">
+		<!-- 볼륨 -->
+		<div class="col-lg-4" >
+			<h5>거래량 순위</h5>
+			<div id="volDiv"></div>
+		</div>
+		
+		<!-- oi  -->
+		<div class="col-lg-4">
+			<h5>oi 순위</h5>
+			<div id="oiDiv"></div>
+		</div>
+		
+		<!-- 코인정보 -->
+		<div class="col-lg-4">
+			<h5>코인 정보</h5>
+		</div>
+	</div>
 </div>
-
 
 <th:block layout:fragment="script">
 <script>
 window.onload = function(){
-
+	getTicker()
 }
-/* function getAllCoin(){
+function getTicker(){
 	$.ajax({
-		url : "/bybit/allCoin",
+		url : "/getTicker",
 		dataType : "json",
 		success : function(data){
-			alert(" 성공")
+			tickerTable(data);
 		}
 	})
-} */
+}
+
+function tickerTable(data){
+    // Map 데이터를 출력
+    $.each(data, function (key, list) {
+    	disp = "";
+    	disp += "<table class='table table-hover'>";
+    	disp += "<thead>";
+    	disp += "<tr class='table-dark'>";
+    	disp += "<th scope='col'></th>";
+    	disp += "<th scope='col'>심볼</th>";
+    	disp += "<th scope='col'>%</th>";
+    	disp += "</tr></thead>";
+    	disp += "<tbody>";
+        $.each(list, function (index, item) {
+        	disp += "<tr class='table-primary'>";
+        	disp += "<td>" + (Number(index)+1) + "</td>";
+        	disp += "<td>" + item.symbol + "</td>";
+        	disp += "<td>" + item.percent + "</td>";
+        	disp += "</tr>";
+        });
+    	disp += "</tbody></table>";
+    	
+        // List 데이터를 출력
+        if(key == "volumeTickerList"){
+        	$("#volDiv").html(disp);
+        }else{
+        	$("#oiDiv").html(disp);
+        }
+    });
+}
 </script>
 </th:block>
 
