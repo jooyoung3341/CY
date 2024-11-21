@@ -16,8 +16,11 @@ import java.util.Set;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import groovy.util.logging.Commons;
@@ -33,7 +36,7 @@ public class Common {
     final static String API_SECRET  = "dCVX8PJYCwAIMv6QCitDaF1CtfTjL7iIR6m1";
     final static String TIMESTAMP = Long.toString(ZonedDateTime.now().toInstant().toEpochMilli());
     final static String RECV_WINDOW = "5000";
-    
+
 	public String timestempToKst(String ms) {
         // Unix 타임스탬프 (밀리초)
         long timestamp = Long.parseLong(ms);
@@ -54,6 +57,14 @@ public class Common {
 		double result = (dClosePrice - dOpenPrice) / dOpenPrice * 100;
 		 return df.format(result);
 	}
+	
+	public String usdToKrw(double usd, double cap) {
+		double result = cap * usd;
+		DecimalFormat df = new DecimalFormat("#,###");
+		
+		return df.format(result);
+	}
+	
 	public Map<String, Object> getBybit(Map<String, Object> map, String url) throws InvalidKeyException, NoSuchAlgorithmException{
 		String signature = genGetSign(map);
 		StringBuilder sb = genQueryStr(map);
@@ -117,4 +128,6 @@ public class Common {
 	        }
 	        return hexString.toString();
 	    }
+	    
+	    
 }

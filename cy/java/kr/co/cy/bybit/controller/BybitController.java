@@ -52,12 +52,22 @@ public class BybitController {
 		List<Map<String, Object>> tickerList = (List<Map<String, Object>>) tickers.get("list");
 		
 		List<Map<String, Object>> volumeTicker = tickerList.stream()
+				.filter(entry -> {
+		            String symbol = (String) entry.get("symbol");
+		            // '10000' 또는 '100000'이 포함되어 있으면 제외
+		            return !symbol.contains("10000") && !symbol.contains("100000");
+		        })
 	            .map(entry -> Map.of(
 	                "symbol", entry.get("symbol"),
 	                "volume24h", entry.get("volume24h")
 	            ))
 	            .collect(Collectors.toList());
 		List<Map<String, Object>> oiTicker = tickerList.stream()
+				.filter(entry -> {
+		            String symbol = (String) entry.get("symbol");
+		            // '10000' 또는 '100000'이 포함되어 있으면 제외
+		            return !symbol.contains("10000") && !symbol.contains("100000");
+		        })
 	            .map(entry -> Map.of(
 	                "symbol", entry.get("symbol"),
 	                "openInterest", entry.get("openInterest"),

@@ -24,7 +24,7 @@
 		
 		<!-- 코인정보 -->
 		<div class="col-lg-4">
-			<h5>코인 정보</h5>
+			<div id="infoDiv"></div>
 		</div>
 	</div>
 </div>
@@ -34,7 +34,47 @@
 window.onload = function(){
 	getTicker()
 }
+function getInfo(ele){
+	var symbol =  $(ele).text().replace('USDT', '').toLowerCase();
+	console.log(symbol);
+	$.ajax({
+		url : "/gecko",
+		dataType : "json",
+		data : {"symbol" : symbol.replace(/\d+/g, '').toLowerCase()},
+		success : function(data){
+			console.log(data)
+			infoTable(data)
+		}
+	})
+}
+
+function infoTable(data){
+	if(data.error == null){
+	disp = `<div class='card mb-3'>`;
+	disp += `<h3 class='card-header'>코인 정보</h3>`;
+	disp += `<ul class='list-group list-group-flush'>`;
+	disp += `<li class='list-group-item'> 심볼 :  ${data.symbol} </li>`;
+	disp += `<li class='list-group-item'> 시총 :  ${data.marketCap}원 </li>`;
+	disp += `</div>`
+	disp += `<div class='card'>`;
+	disp += `<div class='card-body'>`;
+	disp += `<h4 class='card-title'>설명(메타)</h4>`;
+	disp += `<h6 class='card-subtitle mb-2 text-muted'></h6>`
+	data.meta.forEach(function(item){
+		disp += `<p class='card-text'>${item}</p>`;
+	});
+	disp += `</div>`    
+	disp += `</div>`    
+		$("#infoDiv").html(disp);
+	}else{
+		disp= "<h2>코인정보 없음</h2>"
+			$("#infoDiv").html(disp);
+	}
+	
+			
+}
 function getTicker(){
+	
 	$.ajax({
 		url : "/getTicker",
 		dataType : "json",
@@ -59,7 +99,7 @@ function tickerTable(data){
         $.each(list, function (index, item) {
         	disp += "<tr class='table-primary'>";
         	disp += "<td>" + (Number(index)+1) + "</td>";
-        	disp += "<td>" + item.symbol + "</td>";
+        	disp += "<td><a href='#' onclick='getInfo(this)'>" + item.symbol + "</a></td>";
         	disp += "<td>" + item.percent + "</td>";
         	disp += "</tr>";
         });
